@@ -290,7 +290,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // 你的 Firebase 設定 (yongyi-999e5)
+    // 你的最新 Firebase 設定 (yongyi-999e5)
     const firebaseConfig = {
       apiKey: "AIzaSyBdlPdaqxGriXGpnSfrF5V1-JvD4SF3bQU",
       authDomain: "yongyi-999e5.firebaseapp.com",
@@ -694,15 +694,30 @@
         
         // 名字處理
         const rawName = nameInput.value.trim();
-        currentPlayerName = rawName || "GUEST";
-        currentPlayerName = currentPlayerName.toUpperCase();
+        let safeName = rawName || "GUEST";
+        safeName = safeName.toUpperCase();
         
-        // 髒話過濾 (簡單版)
-        const badWords = ['FUCK', 'SHIT', 'BITCH', '詩雅', 'SIA', '시아']; 
-        if(badWords.some(w => currentPlayerName.includes(w))) {
-             currentPlayerName = "TEAM JUYEON";
-             alert("Be nice! Name changed to TEAM JUYEON.");
+        // --- 🛡️ 強力過濾系統 ---
+        const badWords = [
+            'FUCK', 'SHIT', 'BITCH', '笨蛋', 'SEX', // 髒話
+            '詩雅', 'SIA', '시아' // 🚫 指定屏蔽名字
+        ];
+        
+        let isBad = false;
+        for (let word of badWords) {
+            if (safeName.includes(word.toUpperCase())) {
+                isBad = true;
+                break;
+            }
         }
+        
+        if (isBad) {
+            safeName = "LOVE&PEACE";
+            alert("Name not allowed! Changed to LOVE&PEACE.");
+        }
+        
+        currentPlayerName = safeName;
+        // --- 🛡️ 過濾結束 ---
         
         overlay.style.display = 'none';
         

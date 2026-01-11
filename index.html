@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sweet Quest: Cat Bonus Edition</title>
+    <title>Sweet Quest: Dog Edition</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
@@ -77,7 +77,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(45, 52, 54, 0.9);
+            background: rgba(45, 52, 54, 0.95);
             z-index: 20;
             display: flex;
             flex-direction: column;
@@ -87,7 +87,7 @@
             text-align: center;
         }
 
-        /* 通用按鈕樣式 */
+        /* 遊戲按鈕 */
         .game-btn {
             font-family: 'VT323', monospace;
             cursor: pointer;
@@ -107,13 +107,52 @@
 
         /* 開始按鈕 */
         #startBtn {
-            margin-top: 25px;
-            padding: 12px 30px;
+            margin-top: 15px;
+            padding: 10px 30px;
             font-size: 32px;
             background: #ff7675;
             color: white;
             animation: pulse 1.5s infinite;
         }
+
+        /* 名字輸入框 */
+        #playerName {
+            font-family: 'VT323', monospace;
+            font-size: 24px;
+            padding: 5px;
+            width: 180px;
+            text-align: center;
+            margin-top: 15px;
+            border: 2px solid #fff;
+            border-radius: 5px;
+            background: #2d3436;
+            color: #ffeaa7;
+            text-transform: uppercase;
+            outline: none;
+        }
+        #playerName::placeholder { color: #636e72; }
+
+        /* 排行榜區塊 */
+        #leaderboard-section {
+            width: 80%;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            border: 1px solid #6c5ce7;
+            min-height: 100px;
+            max-height: 160px;
+            overflow-y: auto;
+        }
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            color: #ffeaa7;
+            border-bottom: 1px dashed rgba(255,255,255,0.2);
+            padding: 4px 0;
+        }
+        .rank-item:first-child { color: #ff7675; font-weight: bold; }
 
         /* 退出按鈕 */
         #exitBtn {
@@ -135,7 +174,7 @@
         }
 
         .controls-area {
-            height: 130px; /* 稍微加高以容納連結 */
+            height: 130px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -166,17 +205,6 @@
         }
         .circle-btn:active { transform: translateY(4px); box-shadow: none; }
 
-        .touch-hint {
-            position: absolute;
-            bottom: 5px;
-            width: 100%;
-            text-align: center;
-            font-size: 14px;
-            color: rgba(255,255,255,0.5);
-            left: 0;
-        }
-
-        /* IG 連結樣式 */
         .console-link {
             font-family: 'VT323', monospace;
             color: #dfe6e9;
@@ -199,7 +227,6 @@
             background: rgba(0,0,0,0.2);
             transform: scale(1.05);
         }
-
     </style>
 </head>
 <body>
@@ -217,13 +244,19 @@
             <h1 id="title-text" style="font-size: 50px; margin: 0; color: #ffeaa7; text-shadow: 4px 4px 0 #e17055;">SWEET QUEST</h1>
             <p id="subtitle-text" style="font-size: 20px; color: #fab1a0; margin-top:5px;">Yongyi's Macaron Challenge</p>
             
-            <div style="margin-top:20px; font-size: 18px; color:#ccc; line-height: 1.6;">
-                Touch LEFT / RIGHT to Move<br>
-                <span style="color:#fff;">🐱 White Cat = +15 pts</span><br>
-                <span style="color:#e17055;">🏀 Basketball = -5 pts</span>
+            <!-- 名字輸入框 -->
+            <input type="text" id="playerName" placeholder="YOUR NAME" maxlength="8">
+
+            <div style="margin-top:10px; font-size: 16px; color:#ccc; line-height: 1.4;">
+                <span style="color:#fff;">🐱 Cat +15</span> | <span style="color:#e17055;">🏀 Ball -5</span>
             </div>
             
-            <button id="startBtn" class="game-btn" onclick="startGame()" ontouchstart="startGame()">START GAME</button>
+            <button id="startBtn" class="game-btn" onclick="startGame(event)">START GAME</button>
+            
+            <!-- 排行榜顯示區 -->
+            <div id="leaderboard-section">
+                <div style="color:#a29bfe; font-size:16px;">LOADING RANK...</div>
+            </div>
         </div>
     </div>
     
@@ -233,14 +266,11 @@
             <div class="d-pad-h"></div>
         </div>
         
-        <!-- 中央控制區：EXIT 與 IG 連結 -->
         <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
             <button id="exitBtn" class="game-btn" onclick="exitGame()">EXIT</button>
             <div style="font-size:10px; color:#636e72; margin-bottom: 3px;">SELECT</div>
             
-            <!-- IG Link -->
             <a href="https://www.instagram.com/tbzuyeon/" target="_blank" class="console-link">
-                <!-- 簡易 IG 像素圖示 -->
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                 </svg>
@@ -253,9 +283,85 @@
             <div class="circle-btn"></div>
         </div>
     </div>
-    <div class="touch-hint">Mobile Touch Supported</div>
 </div>
 
+<!-- Firebase SDK Module -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // 你的 Firebase 設定 (yongyi-999e5)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBdlPdaqxGriXGpnSfrF5V1-JvD4SF3bQU",
+      authDomain: "yongyi-999e5.firebaseapp.com",
+      projectId: "yongyi-999e5",
+      storageBucket: "yongyi-999e5.firebasestorage.app",
+      messagingSenderId: "1095860774070",
+      appId: "1:1095860774070:web:6df2dcbc6708d4eb54b217",
+      measurementId: "G-NY0VDZ5YR3"
+    };
+
+    let db;
+    try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        console.log("Firebase initialized");
+    } catch (e) {
+        console.error("Firebase init error:", e);
+    }
+
+    // 上傳分數
+    window.addScore = async function(name, score) {
+        if (!db) return;
+        try {
+            // 使用 leaderboard_dog 集合，與另一個遊戲區分
+            await addDoc(collection(db, "leaderboard_dog"), {
+                name: name,
+                score: score,
+                timestamp: new Date()
+            });
+        } catch (e) {
+            console.error("Error adding score: ", e);
+        }
+    };
+
+    // 讀取排行榜
+    window.getLeaderboard = async function() {
+        if (!db) return "<div style='color:red'>DB Error</div>";
+        try {
+            const q = query(collection(db, "leaderboard_dog"), orderBy("score", "desc"), limit(5));
+            const querySnapshot = await getDocs(q);
+            
+            let html = "";
+            let rank = 1;
+            querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                html += `
+                    <div class="rank-item">
+                        <span>#${rank} ${data.name}</span>
+                        <span>${data.score}</span>
+                    </div>`;
+                rank++;
+            });
+            
+            if(html === "") html = "<div style='color:#ccc'>No records yet. Be the first!</div>";
+            return html;
+        } catch (e) {
+            console.error("Read error:", e);
+            return "<div style='color:red'>Loading Failed</div>";
+        }
+    };
+
+    // 頁面載入時先抓一次排行榜
+    window.onload = async () => {
+        const lb = document.getElementById('leaderboard-section');
+        if(window.getLeaderboard) {
+            lb.innerHTML = await window.getLeaderboard();
+        }
+    };
+</script>
+
+<!-- 遊戲主邏輯 -->
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -267,8 +373,9 @@
     const startBtn = document.getElementById('startBtn');
     const container = document.getElementById('screen-container');
     const dpadVisual = document.getElementById('dpad-visual');
+    const nameInput = document.getElementById('playerName');
+    const lbSection = document.getElementById('leaderboard-section');
 
-    // 圖片載入
     const bgImg = new Image();
     bgImg.src = 'https://static.wixstatic.com/media/ededed_4473b3774003426b89435743579a6aba~mv2.png';
 
@@ -281,6 +388,7 @@
     let items = [];
     let canvasW, canvasH;
     let animationId;
+    let currentPlayerName = "GUEST";
 
     const player = {
         x: 0, y: 0,
@@ -325,62 +433,49 @@
         }
     }
 
-    // --- 繪製扁扁貓咪頭 ---
     function drawCat(item) {
         let cx = item.x + item.w / 2;
         let cy = item.y + item.h / 2;
         
-        // 畫耳朵
         ctx.fillStyle = "#fff";
         ctx.beginPath();
-        // 左耳
         ctx.moveTo(cx - item.w/2 + 2, cy - item.h/4);
         ctx.lineTo(cx - item.w/2 - 2, cy - item.h);
         ctx.lineTo(cx, cy - item.h/2);
-        // 右耳
         ctx.moveTo(cx + item.w/2 - 2, cy - item.h/4);
         ctx.lineTo(cx + item.w/2 + 2, cy - item.h);
         ctx.lineTo(cx, cy - item.h/2);
         ctx.fill();
 
-        // 畫扁臉 (使用 ellipse)
         ctx.fillStyle = "#fff";
         ctx.beginPath();
-        // rx = item.w/2, ry = item.h/2 (這樣就會扁扁的)
         ctx.ellipse(cx, cy, item.w/2, item.h/2, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // 眼睛
         ctx.fillStyle = "#333";
         ctx.beginPath();
         ctx.arc(cx - 10, cy - 2, 3, 0, Math.PI * 2);
         ctx.arc(cx + 10, cy - 2, 3, 0, Math.PI * 2);
         ctx.fill();
 
-        // 鼻子
         ctx.fillStyle = "#ff7675";
         ctx.beginPath();
         ctx.ellipse(cx, cy + 4, 3, 2, 0, 0, Math.PI * 2);
         ctx.fill();
     }
 
-    // --- 繪製籃球 ---
     function drawBasketball(item) {
         let cx = item.x + item.w / 2;
         let cy = item.y + item.h / 2;
         let r = item.w / 2;
 
-        // 球體
-        ctx.fillStyle = "#e17055"; // 籃球橘
+        ctx.fillStyle = "#e17055"; 
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.fill();
 
-        // 線條
         ctx.strokeStyle = "#2d3436";
         ctx.lineWidth = 2;
-
-        // 十字線
         ctx.beginPath();
         ctx.moveTo(cx, cy - r);
         ctx.lineTo(cx, cy + r);
@@ -391,13 +486,11 @@
         ctx.lineTo(cx + r, cy);
         ctx.stroke();
 
-        // 曲線
         ctx.beginPath();
         ctx.ellipse(cx, cy, r * 0.7, r, 0, 0, Math.PI * 2);
         ctx.stroke();
     }
 
-    // 繪製馬卡龍
     function drawMacaron(item) {
         let cx = item.x + item.w / 2;
         let cy = item.y + item.h / 2;
@@ -430,54 +523,14 @@
     function createItem() {
         const rand = Math.random();
         
-        // 10% 機率是扁扁貓咪 (15分)
         if (rand < 0.1) {
-            items.push({
-                type: 'cat',
-                x: Math.random() * (canvasW - 45),
-                y: -50,
-                w: 45, 
-                h: 30, // 修改：高度變矮 (原本 40 -> 30)
-                speed: 6,
-                points: 15,
-                color: '#fff'
-            });
-        } 
-        // 20% 機率是籃球 (扣分)
-        else if (rand < 0.3) {
-            items.push({
-                type: 'basketball',
-                x: Math.random() * (canvasW - 40),
-                y: -50,
-                w: 40, h: 40,
-                speed: 7, 
-                points: -5,
-                color: '#e17055'
-            });
-        }
-        // 20% 機率是特大馬卡龍 (11分)
-        else if (rand < 0.5) {
-            items.push({
-                type: 'macaron',
-                x: Math.random() * (canvasW - 55),
-                y: -50,
-                w: 55, h: 30,
-                speed: 3,
-                points: 11,
-                color: ['#fd79a8', '#a29bfe', '#55efc4', '#ffeaa7', '#fab1a0'][Math.floor(Math.random()*5)]
-            });
-        } 
-        // 50% 機率是普通馬卡龍 (5分)
-        else {
-            items.push({
-                type: 'macaron',
-                x: Math.random() * (canvasW - 35),
-                y: -50,
-                w: 35, h: 20,
-                speed: 5,
-                points: 5,
-                color: ['#fd79a8', '#a29bfe', '#55efc4', '#ffeaa7', '#fab1a0'][Math.floor(Math.random()*5)]
-            });
+            items.push({ type: 'cat', x: Math.random() * (canvasW - 45), y: -50, w: 45, h: 30, speed: 6, points: 15 });
+        } else if (rand < 0.3) {
+            items.push({ type: 'basketball', x: Math.random() * (canvasW - 40), y: -50, w: 40, h: 40, speed: 7, points: -5 });
+        } else if (rand < 0.5) {
+            items.push({ type: 'macaron', x: Math.random() * (canvasW - 55), y: -50, w: 55, h: 30, speed: 3, points: 11, color: ['#fd79a8', '#a29bfe', '#55efc4', '#ffeaa7', '#fab1a0'][Math.floor(Math.random()*5)] });
+        } else {
+            items.push({ type: 'macaron', x: Math.random() * (canvasW - 35), y: -50, w: 35, h: 20, speed: 5, points: 5, color: ['#fd79a8', '#a29bfe', '#55efc4', '#ffeaa7', '#fab1a0'][Math.floor(Math.random()*5)] });
         }
     }
 
@@ -510,40 +563,29 @@
             let item = items[i];
             item.y += item.speed + (score / 300);
             
-            if (item.type === 'cat') {
-                drawCat(item);
-            } else if (item.type === 'basketball') {
-                drawBasketball(item);
-            } else {
-                drawMacaron(item);
-            }
+            if (item.type === 'cat') drawCat(item);
+            else if (item.type === 'basketball') drawBasketball(item);
+            else drawMacaron(item);
 
-            // 碰撞檢測
             if (
                 item.x < player.x + player.width &&
                 item.x + item.w > player.x &&
                 item.y < player.y + player.height &&
                 item.y + item.h > player.y
             ) {
-                // 加分或扣分
                 score += item.points;
-                
-                // 如果是扣分效果，畫面閃紅一下
                 if(item.points < 0) {
                     ctx.fillStyle = "rgba(255,0,0,0.3)";
                     ctx.fillRect(0,0,canvasW,canvasH);
                 }
-
                 scoreEl.innerText = score;
                 items.splice(i, 1);
                 i--;
 
-                // GAME OVER 檢查
                 if (score <= 0) {
                     gameOver("GAME OVER", "Hit by basketball!");
                     return;
                 }
-
             } else if (item.y > canvasH) {
                 items.splice(i, 1);
                 i--;
@@ -558,36 +600,55 @@
         
         titleText.innerText = title || "GAME OVER";
         titleText.style.color = "#ff7675";
-        
         subTitleText.innerText = subtitle || `Final Score: ${score}`;
         startBtn.innerText = "TRY AGAIN";
         
+        // 顯示輸入框和排行榜
+        nameInput.style.display = 'block';
+        lbSection.style.display = 'block';
         overlay.style.display = 'flex';
+
+        // 上傳分數
+        if(window.addScore) {
+            lbSection.innerHTML = "<div style='color:#ffeaa7'>Saving Score...</div>";
+            window.addScore(currentPlayerName, score).then(() => {
+                // 重新讀取排行榜
+                setTimeout(async () => {
+                    if(window.getLeaderboard) {
+                        lbSection.innerHTML = await window.getLeaderboard();
+                    }
+                }, 1000);
+            });
+        }
     }
 
     function exitGame() {
         gameRunning = false;
         cancelAnimationFrame(animationId);
         
-        // 重置回標題畫面
         titleText.innerText = "SWEET QUEST";
         titleText.style.color = "#ffeaa7";
         subTitleText.innerText = "Yongyi's Macaron Challenge";
         startBtn.innerText = "START GAME";
         
-        // 清空分數
+        nameInput.style.display = 'block';
+        lbSection.style.display = 'block';
+        
         score = 0;
         scoreEl.innerText = "0";
         items = [];
         ctx.clearRect(0, 0, canvasW, canvasH);
         
         overlay.style.display = 'flex';
+        
+        // 重新讀取排行榜
+        if(window.getLeaderboard) {
+            window.getLeaderboard().then(html => lbSection.innerHTML = html);
+        }
     }
 
-    // 控制邏輯
     const keys = { left: false, right: false };
 
-    // 鍵盤
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowLeft') { keys.left = true; dpadVisual.classList.add('active-left'); }
         if (e.key === 'ArrowRight') { keys.right = true; dpadVisual.classList.add('active-right'); }
@@ -597,25 +658,19 @@
         if (e.key === 'ArrowRight') { keys.right = false; dpadVisual.classList.remove('active-right'); }
     });
 
-    // 觸控
     document.body.addEventListener('touchmove', function(e) { 
-        if (gameRunning) {
-            e.preventDefault(); 
-        }
+        if (gameRunning) e.preventDefault(); 
     }, { passive: false });
 
     container.addEventListener('touchstart', (e) => {
-        if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.closest('a')) {
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.closest('a') || e.target.tagName === 'INPUT') {
             return;
         }
-
         if (e.cancelable) e.preventDefault();
-        
         if (!gameRunning) return;
 
         const touchX = e.touches[0].clientX;
         const rect = container.getBoundingClientRect();
-        
         if (touchX < rect.left + rect.width / 2) {
             keys.left = true;
             dpadVisual.classList.add('active-left');
@@ -626,12 +681,8 @@
     }, { passive: false });
 
     container.addEventListener('touchend', (e) => {
-        if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.closest('a')) {
-            return;
-        }
-
+        if (e.target.tagName === 'BUTTON' || e.target.closest('button') || e.target.closest('a') || e.target.tagName === 'INPUT') return;
         if (e.cancelable) e.preventDefault();
-        
         keys.left = false;
         keys.right = false;
         dpadVisual.classList.remove('active-left');
@@ -641,11 +692,23 @@
     function startGame(e) {
         if(e) e.stopPropagation();
         
+        // 名字處理
+        const rawName = nameInput.value.trim();
+        currentPlayerName = rawName || "GUEST";
+        currentPlayerName = currentPlayerName.toUpperCase();
+        
+        // 髒話過濾 (簡單版)
+        const badWords = ['FUCK', 'SHIT', 'BITCH', '詩雅', 'SIA', '시아']; 
+        if(badWords.some(w => currentPlayerName.includes(w))) {
+             currentPlayerName = "TEAM JUYEON";
+             alert("Be nice! Name changed to TEAM JUYEON.");
+        }
+        
         overlay.style.display = 'none';
         
         if (!gameRunning) {
             gameRunning = true;
-            score = 0; // 初始分數
+            score = 0;
             items = [];
             scoreEl.innerText = '0';
             resize();

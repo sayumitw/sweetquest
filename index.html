@@ -267,7 +267,7 @@
         </div>
         
         <div style="display:flex; flex-direction:column; align-items:center; gap:2px;">
-            <button id="exitBtn" class="game-btn" onclick="exitGame()">EXIT</button>
+            <button id="exitBtn" class="game-btn" onclick="exitGame('manual')">EXIT</button>
             <div style="font-size:10px; color:#636e72; margin-bottom: 3px;">SELECT</div>
             
             <a href="https://www.instagram.com/tbzuyeon/" target="_blank" class="console-link">
@@ -290,7 +290,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // 你的最新 Firebase 設定 (yongyi-999e5)
     const firebaseConfig = {
       apiKey: "AIzaSyBdlPdaqxGriXGpnSfrF5V1-JvD4SF3bQU",
       authDomain: "yongyi-999e5.firebaseapp.com",
@@ -314,12 +313,12 @@
     window.addScore = async function(name, score) {
         if (!db) return;
         try {
-            // 使用 leaderboard_dog 集合，與另一個遊戲區分
             await addDoc(collection(db, "leaderboard_dog"), {
                 name: name,
                 score: score,
                 timestamp: new Date()
             });
+            console.log("Score saved:", score);
         } catch (e) {
             console.error("Error adding score: ", e);
         }
@@ -389,6 +388,9 @@
     let canvasW, canvasH;
     let animationId;
     let currentPlayerName = "GUEST";
+    
+    // 🔥 新增：防止重複儲存的標記
+    let isScoreSaved = false;
 
     const player = {
         x: 0, y: 0,
@@ -407,6 +409,7 @@
     window.addEventListener('resize', resize);
     resize();
 
+    // --- 繪圖函數區 (背景、玩家、物品) ---
     function drawBackground() {
         if (bgImg.complete && bgImg.naturalWidth !== 0) {
             ctx.drawImage(bgImg, 0, 0, canvasW, canvasH);
@@ -594,6 +597,27 @@
         animationId = requestAnimationFrame(update);
     }
 
+    // 🔥 自動儲存邏輯
+    function attemptAutoSave() {
+        // 分數大於0 且 尚未儲存過 且 遊戲正在運行(或剛暫停)
+        if (score > 0 && !isScoreSaved) {
+            isScoreSaved = true; 
+            if (window.addScore) {
+                window.addScore(currentPlayerName, score);
+            }
+        }
+    }
+
+    // 🔥 監聽關閉/隱藏事件
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') {
+            attemptAutoSave();
+        }
+    });
+    window.addEventListener('beforeunload', () => {
+        attemptAutoSave();
+    });
+
     function gameOver(title, subtitle) {
         gameRunning = false;
         cancelAnimationFrame(animationId);
@@ -603,28 +627,40 @@
         subTitleText.innerText = subtitle || `Final Score: ${score}`;
         startBtn.innerText = "TRY AGAIN";
         
-        // 顯示輸入框和排行榜
         nameInput.style.display = 'block';
         lbSection.style.display = 'block';
         overlay.style.display = 'flex';
 
-        // 上傳分數
-        if(window.addScore) {
+        // 🔥 修正：檢查是否已經儲存過
+        if(window.addScore && !isScoreSaved) {
+            isScoreSaved = true; // 標記已儲存
             lbSection.innerHTML = "<div style='color:#ffeaa7'>Saving Score...</div>";
             window.addScore(currentPlayerName, score).then(() => {
-                // 重新讀取排行榜
                 setTimeout(async () => {
                     if(window.getLeaderboard) {
                         lbSection.innerHTML = await window.getLeaderboard();
                     }
                 }, 1000);
             });
+        } else {
+            // 如果已經自動儲存過了，直接更新排行榜顯示
+            setTimeout(async () => {
+                if(window.getLeaderboard) {
+                    lbSection.innerHTML = await window.getLeaderboard();
+                }
+            }, 500);
         }
     }
 
     function exitGame() {
         gameRunning = false;
         cancelAnimationFrame(animationId);
+        
+        // 🔥 Exit 也算分 (檢查是否已存)
+        if (score > 0 && !isScoreSaved && window.addScore) {
+             isScoreSaved = true;
+             window.addScore(currentPlayerName, score);
+        }
         
         titleText.innerText = "SWEET QUEST";
         titleText.style.color = "#ffeaa7";
@@ -641,7 +677,6 @@
         
         overlay.style.display = 'flex';
         
-        // 重新讀取排行榜
         if(window.getLeaderboard) {
             window.getLeaderboard().then(html => lbSection.innerHTML = html);
         }
@@ -692,16 +727,11 @@
     function startGame(e) {
         if(e) e.stopPropagation();
         
-        // 名字處理
         const rawName = nameInput.value.trim();
         let safeName = rawName || "GUEST";
         safeName = safeName.toUpperCase();
         
-        // --- 🛡️ 強力過濾系統 ---
-        const badWords = [
-            'FUCK', 'SHIT', 'BITCH', '笨蛋', 'SEX', // 髒話
-            '詩雅', 'SIA', '시아' // 🚫 指定屏蔽名字
-        ];
+        const badWords = ['FUCK', 'SHIT', 'BITCH', '笨蛋', 'SEX', '詩雅', 'SIA', '시아'];
         
         let isBad = false;
         for (let word of badWords) {
@@ -717,10 +747,11 @@
         }
         
         currentPlayerName = safeName;
-        // --- 🛡️ 過濾結束 ---
-        
         overlay.style.display = 'none';
         
+        // 🔥 重置儲存狀態
+        isScoreSaved = false;
+
         if (!gameRunning) {
             gameRunning = true;
             score = 0;
